@@ -14,7 +14,7 @@ int move(int p[],int len){
   return s;
 }
 
-// ✅ Plot function
+// Plot
 void plot(string title,int path[],int k){
   ofstream g("g.gp");
 
@@ -35,7 +35,7 @@ void plot(string title,int path[],int k){
   system("gnuplot g.gp");
 }
 
-// C-SCAN
+// ✅ C-SCAN (both directions)
 void cscan(){
   int s[20];
   for(int i=0;i<n;i++) s[i]=req[i];
@@ -44,26 +44,52 @@ void cscan(){
   int path[50],k=0;
   path[k++]=head;
 
-  for(int i=0;i<n;i++)
-    if(s[i]>=head)
-      path[k++]=s[i];
+  int dir;
+  cout<<"\nDirection (1=RIGHT, 2=LEFT): ";
+  cin>>dir;
 
-  path[k++]=dmax;
-  path[k++]=dmin;
+  if(dir==1){ // RIGHT
+    for(int i=0;i<n;i++)
+      if(s[i]>=head)
+        path[k++]=s[i];
 
-  for(int i=0;i<n;i++)
-    if(s[i]<head)
-      path[k++]=s[i];
+    path[k++]=dmax;
+    path[k++]=dmin;
 
-  cout<<"\nC-SCAN: ";
+    for(int i=0;i<n;i++)
+      if(s[i]<head)
+        path[k++]=s[i];
+
+    cout<<"\nC-SCAN RIGHT: ";
+  }
+
+  else if(dir==2){ // LEFT
+    for(int i=n-1;i>=0;i--)
+      if(s[i]<=head)
+        path[k++]=s[i];
+
+    path[k++]=dmin;
+    path[k++]=dmax;
+
+    for(int i=n-1;i>=0;i--)
+      if(s[i]>head)
+        path[k++]=s[i];
+
+    cout<<"\nC-SCAN LEFT: ";
+  }
+
+  else{
+    cout<<"Invalid\n";
+    return;
+  }
+
   for(int i=0;i<k;i++) cout<<path[i]<<" ";
-
   cout<<"\nTotal: "<<move(path,k)<<"\n";
 
-  plot("C-SCAN Disk Scheduling",path,k);
+  plot("C-SCAN",path,k);
 }
 
-// LOOK
+// ✅ LOOK (both directions)
 void look(){
   int s[20];
   for(int i=0;i<n;i++) s[i]=req[i];
@@ -72,23 +98,46 @@ void look(){
   int path[50],k=0;
   path[k++]=head;
 
-  for(int i=0;i<n;i++)
-    if(s[i]>=head)
-      path[k++]=s[i];
+  int dir;
+  cout<<"\nDirection (1=RIGHT, 2=LEFT): ";
+  cin>>dir;
 
-  for(int i=n-1;i>=0;i--)
-    if(s[i]<head)
-      path[k++]=s[i];
+  if(dir==1){ // RIGHT
+    for(int i=0;i<n;i++)
+      if(s[i]>=head)
+        path[k++]=s[i];
 
-  cout<<"\nLOOK: ";
+    for(int i=n-1;i>=0;i--)
+      if(s[i]<head)
+        path[k++]=s[i];
+
+    cout<<"\nLOOK RIGHT: ";
+  }
+
+  else if(dir==2){ // LEFT
+    for(int i=n-1;i>=0;i--)
+      if(s[i]<=head)
+        path[k++]=s[i];
+
+    for(int i=0;i<n;i++)
+      if(s[i]>head)
+        path[k++]=s[i];
+
+    cout<<"\nLOOK LEFT: ";
+  }
+
+  else{
+    cout<<"Invalid\n";
+    return;
+  }
+
   for(int i=0;i<k;i++) cout<<path[i]<<" ";
-
   cout<<"\nTotal: "<<move(path,k)<<"\n";
 
-  plot("LOOK Disk Scheduling",path,k);
+  plot("LOOK",path,k);
 }
 
-// C-LOOK
+// ✅ C-LOOK (both directions)
 void clook(){
   int s[20];
   for(int i=0;i<n;i++) s[i]=req[i];
@@ -97,22 +146,46 @@ void clook(){
   int path[50],k=0;
   path[k++]=head;
 
-  for(int i=0;i<n;i++)
-    if(s[i]>=head)
-      path[k++]=s[i];
+  int dir;
+  cout<<"\nDirection (1=RIGHT, 2=LEFT): ";
+  cin>>dir;
 
-  for(int i=0;i<n;i++)
-    if(s[i]<head)
-      path[k++]=s[i];
+  if(dir==1){ // RIGHT
+    for(int i=0;i<n;i++)
+      if(s[i]>=head)
+        path[k++]=s[i];
 
-  cout<<"\nC-LOOK: ";
+    for(int i=0;i<n;i++)
+      if(s[i]<head)
+        path[k++]=s[i];
+
+    cout<<"\nC-LOOK RIGHT: ";
+  }
+
+  else if(dir==2){ // LEFT
+    for(int i=n-1;i>=0;i--)
+      if(s[i]<=head)
+        path[k++]=s[i];
+
+    for(int i=n-1;i>=0;i--)
+      if(s[i]>head)
+        path[k++]=s[i];
+
+    cout<<"\nC-LOOK LEFT: ";
+  }
+
+  else{
+    cout<<"Invalid\n";
+    return;
+  }
+
   for(int i=0;i<k;i++) cout<<path[i]<<" ";
-
   cout<<"\nTotal: "<<move(path,k)<<"\n";
 
-  plot("C-LOOK Disk Scheduling",path,k);
+  plot("C-LOOK",path,k);
 }
 
+// MAIN
 int main(){
   cout<<"dmin dmax n head: ";
   cin>>dmin>>dmax>>n>>head;
@@ -121,9 +194,16 @@ int main(){
   for(int i=0;i<n;i++)
     cin>>req[i];
 
-  cscan();
-  look();
-  clook();
+  cout<<"\n1.C-SCAN\n2.LOOK\n3.C-LOOK\nEnter choice: ";
+  int ch;
+  cin>>ch;
+
+  switch(ch){
+    case 1: cscan(); break;
+    case 2: look(); break;
+    case 3: clook(); break;
+    default: cout<<"Invalid choice\n";
+  }
 
   return 0;
 }
