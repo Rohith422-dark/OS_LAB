@@ -1,120 +1,94 @@
 #include<iostream>
 #include<vector>
-#include<string>
-#include<climits>
 #include<fstream>
 #include<cstdlib>
 using namespace std;
 
-struct Hole{
-  int size;
-  string status;   // "OS" / "free" / "used"
-  string file;
-  int fsize;
-};
-
 int main(){
-  int n,f;
-  cout<<"Holes: "; cin>>n;
+    int nb,np;
+    cout<<"Enter number of memory blocks: ";
+    cin>>nb;
 
-  vector<Hole> h(n);
+    vector<int> block(nb);
+    cout<<"Enter block sizes:\n";
+    for(int i=0;i<nb;i++) cin>>block[i];
 
-  for(int i=0;i<n;i++){
-    cout<<"Size Status(OS/free): ";
-    cin>>h[i].size>>h[i].status;
-    h[i].file="";
-    h[i].fsize=0;
-  }
+    cout<<"\nEnter number of processes: ";
+    cin>>np;
 
-  cout<<"Files: "; cin>>f;
+    vector<int> process(np);
+    cout<<"Enter process sizes:\n";
+    for(int i=0;i<np;i++) cin>>process[i];
 
-  vector<int> fs(f);
-  vector<string> fn(f);
+    cout<<"\n1. First Fit\n2. Best Fit\n3. Worst Fit\n";
+    int choice;
+    cout<<"Enter choice: ";
+    cin>>choice;
 
-  for(int i=0;i<f;i++){
-    cout<<"Name Size: ";
-    cin>>fn[i]>>fs[i];
-  }
+    vector<int> alloc(np,-1); // which block assigned
 
-  int ch;
-  cout<<"1=FF 2=BF 3=WF: ";
-  cin>>ch;
+    // -------- Allocation Logic --------
+    for(int i=0;i<np;i++){
+        int idx=-1;
 
-  vector<Hole> holes=h;
+        if(choice==1){ // First Fit
+            for(int j=0;j<nb;j++){
+                if(block[j]>=process[i]){
+                    idx=j;
+                    break;
+                }
+            }
+        }
 
-  // ✅ Allocation logic
-  for(int i=0;i<f;i++){
-    int sel=-1;
-    int best=(ch==2?INT_MAX:-1);
+        else if(choice==2){ // Best Fit
+            int best=1e9;
+            for(int j=0;j<nb;j++){
+                if(block[j]>=process[i] && block[j]<best){
+                    best=block[j];
+                    idx=j;
+                }
+            }
+        }
 
-    for(int j=0;j<n;j++){
-      if(holes[j].status=="free" && holes[j].size>=fs[i]){
-        int d=holes[j].size-fs[i];
+        else if(choice==3){ // Worst Fit
+            int worst=-1;
+            for(int j=0;j<nb;j++){
+                if(block[j]>=process[i] && block[j]>worst){
+                    worst=block[j];
+                    idx=j;
+                }
+            }
+        }
 
-        if(ch==1){ sel=j; break; }
-        if(ch==2 && d<best){ best=d; sel=j; }
-        if(ch==3 && d>best){ best=d; sel=j; }
-      }
+        if(idx!=-1){
+            alloc[i]=idx;
+            block[idx]-=process[i]; // reduce free space
+        }
     }
 
-    if(sel!=-1){
-      holes[sel].file=fn[i];
-      holes[sel].fsize=fs[i];
-      holes[sel].status="used";
+    // -------- Output Table --------
+    cout<<"\nProcess\tSize\tBlock\n";
+    for(int i=0;i<np;i++){
+        cout<<"P"<<i+1<<"\t"<<process[i]<<"\t";
+        if(alloc[i]!=-1) cout<<alloc[i]+1<<"\n";
+        else cout<<"Not Allocated\n";
     }
-    else{
-      cout<<fn[i]<<": Failed\n";
+ofstream g("mem.gp");
+
+g<<"set title 'Memory Allocation'\n";
+g<<"set xrange [0:100]\n";
+g<<"set yrange [0:"<<nb<<"]\n";
+
+for(int i=0;i<np;i++){
+    if(alloc[i]!=-1){
+        g<<"set obj rect from 0,"<<alloc[i]
+         <<" to "<<process[i]<<","<<alloc[i]+0.5
+         <<" fc rgb 'blue'\n";
     }
-  }
+}
 
-  cout<<"\nHole\tSize\tFile/Status\n";
-  for(int i=0;i<n;i++){
-    cout<<i+1<<"\t"<<holes[i].size<<"\t"
-        <<(holes[i].file.empty()?holes[i].status:holes[i].file)<<"\n";
-  }
+g<<"plot 0\npause -1\n";
+g.close();
 
-  // ✅ Gantt Chart Code
-  ofstream g("g.gp");
-
-  int start=0,total=0;
-  for(auto &x:holes) total+=x.size;
-
-  g<<"set title 'Memory Allocation Gantt'\n";
-  g<<"unset ytics\n";
-  g<<"set yrange [0:2]\n";
-  g<<"set xrange [0:"<<total+10<<"]\n";
-
-  for(auto &x:holes){
-    int end=start+x.size;
-
-    string color,label;
-
-    if(x.status=="OS"){
-      color="red";
-      label="OS";
-    }
-    else if(x.status=="free"){
-      color="white";
-      label="Free";
-    }
-    else{
-      color="skyblue";
-      label=x.file;
-    }
-
-    g<<"set obj rect from "<<start<<",0.6 to "
-     <<end<<",1.4 fc rgb '"<<color<<"' fs solid border\n";
-
-    g<<"set label '"<<label<<"' at "
-     <<(start+end)/2<<",1 center\n";
-
-    start=end;
-  }
-
-  g<<"plot 0 notitle\npause mouse close\n";
-  g.close();
-
-  system("gnuplot g.gp");
-
-  return 0;
+system("gnuplot mem.gp");
 }
