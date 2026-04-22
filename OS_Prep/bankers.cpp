@@ -12,9 +12,8 @@ int main(){
   cout<<"Alloc matrix:\n";
   for(int i=0;i<n;i++) for(int j=0;j<m;j++) cin>>alloc[i][j];
   for(int j=0;j<m;j++){
-    int s=0; for(int i=0;i<n;i++) s+=alloc[i][j];
-    work[j]=avail[j]-s;
-  }
+  work[j] = avail[j];
+}
   for(int i=0;i<n;i++) for(int j=0;j<m;j++)
     need[i][j]=maxm[i][j]-alloc[i][j];
   int seq[n],k=0;
